@@ -195,23 +195,23 @@ export default function App() {
 
         const data: VoiceChatResponse = await response.json();
 
-        // Advance turn counter
-        const nextTurn = turnCount + 1;
-        setTurnCount(nextTurn);
+        // Strictly 2 turns total
+        const currentTurn = turnCount;
+        setTurnCount(currentTurn === 1 ? 2 : 1);
 
         // Play the speech audio
         playAudioPayload(data.audioBase64, data.text, () => {
           // If Turn 2 was executed ("Baik, berikut videonya!"), trigger 1.5s transition dimming to black screen
-          if (data.action === 'show_video' || turnCount === 2) {
+          if (data.action === 'show_video' || currentTurn === 2) {
             setIsBlackout(true);
           }
         });
       } catch (err) {
         console.error('Turn processing error:', err);
         // Fallback to strict client-side guarantee for the stage presentation
-        const fallbackText = turnCount === 1 ? SCRIPTED.TURN_1 : SCRIPTED.TURN_2;
         const currentTurn = turnCount;
-        setTurnCount((prev) => prev + 1);
+        const fallbackText = currentTurn === 1 ? SCRIPTED.TURN_1 : SCRIPTED.TURN_2;
+        setTurnCount(currentTurn === 1 ? 2 : 1);
 
         playAudioPayload(null, fallbackText, () => {
           if (currentTurn === 2) {
@@ -385,7 +385,13 @@ export default function App() {
       </div>
 
       {/* PURE BLACKOUT SCREEN TRANSITION (1.5S FADE TO BLACK AFTER TURN 2) */}
-      <StageBlackout isActive={isBlackout} onDismiss={() => setIsBlackout(false)} />
+      <StageBlackout
+        isActive={isBlackout}
+        onDismiss={() => {
+          setIsBlackout(false);
+          setTurnCount(1);
+        }}
+      />
 
       {/* HIDDEN BACKSTAGE MODAL (HOTKEY 'S' OR CLICK HIDDEN CORNER) */}
       <BackstageModal

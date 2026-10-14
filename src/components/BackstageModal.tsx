@@ -127,10 +127,8 @@ export const BackstageModal: React.FC<BackstageModalProps> = ({
                   <div className="text-lg font-bold text-white flex items-center gap-2">
                     <span>
                       {turnCount === 1
-                        ? 'Giliran 1: Salam Pembuka ("Halo Bapak dan teman teman...")'
-                        : turnCount === 2
-                        ? 'Giliran 2: Jawaban Video ("Baik, berikut videonya!")'
-                        : `Giliran ${turnCount}: Tanya Jawab Interaktif Dinamis`}
+                        ? 'Giliran 1 dari 2: Sambutan & Interaksi Real-Time'
+                        : 'Giliran 2 dari 2: Permintaan Video & Redup ke Layar Hitam (Final)'}
                     </span>
                   </div>
                   <div className="text-xs text-slate-300 mt-1 flex items-center gap-1.5">

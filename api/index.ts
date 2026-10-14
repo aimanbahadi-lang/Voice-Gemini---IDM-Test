@@ -99,31 +99,63 @@ app.post('/api/voice-chat', async (req: Request, res: Response) => {
     let responseText = '';
     let action: 'none' | 'show_video' = 'none';
 
-    if (turnCount === 1) {
-      responseText = SCRIPTED_RESPONSES.TURN_1;
-      action = 'none';
-    } else if (turnCount === 2) {
-      responseText = SCRIPTED_RESPONSES.TURN_2;
-      action = 'show_video';
-    } else {
+    const currentTurn = Math.min(2, Math.max(1, turnCount));
+
+    if (currentTurn === 1) {
       if (ai) {
         try {
-          const userMessage = message?.trim() || 'Mohon jelaskan secara singkat keunggulan utama Qlola by BRI.';
+          const userPrompt = message?.trim() || 'Halo, saya ingin memperkenalkan platform ini kepada hadirin.';
           const completion = await ai.models.generateContent({
             model: 'gemini-3.8-flash',
-            contents: userMessage,
+            contents: userPrompt,
             config: {
-              systemInstruction: customPrompt?.trim() || INDONESIAN_SYSTEM_INSTRUCTION,
+              systemInstruction: `
+Anda adalah asisten suara interaktif Qlola by BRI (dilafalkan 'Ke-Lo-La' / 'Kelola by B R I') di panggung presentasi.
+Ini adalah GILIRAN 1 DARI TOTAL 2 GILIRAN.
+Instruksi:
+- Sambut pembicara dan hadirin: selalu sertakan salam hangat 'Halo Bapak dan teman-teman semua'.
+- Tanggapi apa yang baru saja disampaikan pembicara secara natural, cerdas, dan profesional.
+- Batasi jawaban maksimal 2 kalimat ringkas dan jelas.
+- Jangan menyebutkan atau memutar video pada giliran ini.
+              `.trim(),
               temperature: 0.7,
             },
           });
-          responseText = completion.text?.trim() || 'Qlola by BRI mengintegrasikan seluruh solusi perbankan korporasi dalam satu platform.';
-        } catch (genErr) {
-          responseText = 'Qlola by BRI mengintegrasikan Cash Management, Trade Finance, dan Supply Chain dalam satu dashboard terpadu.';
+          responseText = completion.text?.trim() || 'Halo Bapak dan teman teman semua, selamat datang di Qlola by BRI. Ada yang bisa saya bantu jelaskan?';
+        } catch (err) {
+          responseText = 'Halo Bapak dan teman teman semua, ada yang bisa saya bantu?';
         }
       } else {
-        responseText = 'Qlola by BRI mengintegrasikan seluruh ekosistem bisnis Anda.';
+        responseText = 'Halo Bapak dan teman teman semua, ada yang bisa saya bantu?';
       }
+      action = 'none';
+    } else {
+      if (ai) {
+        try {
+          const userPrompt = message?.trim() || 'Tolong tampilkan video Qlola by BRI.';
+          const completion = await ai.models.generateContent({
+            model: 'gemini-3.8-flash',
+            contents: userPrompt,
+            config: {
+              systemInstruction: `
+Anda adalah asisten suara interaktif Qlola by BRI (dilafalkan 'Ke-Lo-La' / 'Kelola by B R I').
+Ini adalah GILIRAN 2 (GILIRAN TERAKHIR SEBELUM VIDEO).
+Instruksi:
+- Pembicara meminta menampilkan video atau penjelasan visual platform.
+- Berikan konfirmasi: sertakan 'Baik, berikut videonya!' secara lugas, bersemangat, dan ramah.
+- Batasi maksimal 1-2 kalimat singkat, karena setelah suara Anda selesai, layar panggung akan langsung meredup ke layar hitam untuk pemutaran video.
+              `.trim(),
+              temperature: 0.7,
+            },
+          });
+          responseText = completion.text?.trim() || 'Baik, berikut videonya!';
+        } catch (err) {
+          responseText = 'Baik, berikut videonya!';
+        }
+      } else {
+        responseText = 'Baik, berikut videonya!';
+      }
+      action = 'show_video';
     }
 
     const audioBase64 = await generateSpeechAudio(responseText, voice);
